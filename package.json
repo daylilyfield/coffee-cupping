@@ -1,0 +1,22 @@
+{
+  "name": "coffee-cupping",
+  "version": "0.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "daylilyfield",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^2.9.25",
+    "coffee-script": "^1.9.2",
+    "doctrine": "^0.6.4",
+    "extend": "^2.0.1",
+    "google-closure-compiler": "^20150505.0.0",
+    "hashmap": "^2.0.3",
+    "mkdirp": "^0.5.0",
+    "shelljs": "^0.4.0",
+    "source-map": "^0.4.2"
+  }
+}
