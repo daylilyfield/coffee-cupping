@@ -1,6 +1,6 @@
 cupping = require '../src/coffee-cupping'
 
-length = (n) -> (r) -> expect(r.errors.length).toBe n
+length = (n) -> (r) -> expect(r.length).toBe n
 
 describe 'coffee-spec', ->
 
@@ -8,7 +8,7 @@ describe 'coffee-spec', ->
 
     cupping
       .check "#{__dirname}/fixture/variable.coffee"
-      .then length 1
+      .then length 2
       .then done
 
   #it 'should be an error because of type mismatch', (done) ->

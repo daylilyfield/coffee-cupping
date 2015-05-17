@@ -2,34 +2,36 @@ fs = require 'fs'
 path = require 'path'
 {exec} = require 'child_process'
 
+debug = require 'debug'
 extend = require 'extend'
 shell = require 'shelljs'
 mkdirp = require 'mkdirp'
 coffee = require 'coffee-script'
 Promise = require 'bluebird'
+{SourceMapConsumer} = require 'source-map'
 
 hack = require './coffee-hack'
+ccResultParser = require './closure-compiler-result-parser'
+
+D = debug 'coffee-cupping'
 
 CHECK_OK = 'OK'
 WORK_DIR = './.coffee-cupping'
 COMPILER_JAR = './node_modules/google-closure-compiler/compiler.jar'
 
-class CoffeeFile
-
-  #:: String, String -> Checktarget
-  constructor: (path, coffee) ->
-    #:: String
-    @path = path
-    #:: String
-    @coffee = coffee
+withLog = (m, f) -> (args...) ->
+  D "begin #{m}"
+  r = f.apply null, args
+  D "end #{m}"
+  return r
 
 exports.check = (p, option = {}) ->
-  paths = if Array.isArray(p) then source else [p]
+  paths = if Array.isArray(p) then p else [p]
 
-  option.compiler or= COMPILER_JAR
-  option.enc or= 'utf8'
-  option.workDir or= WORK_DIR
-  option.coffee or= {}
+  option.compiler ?= COMPILER_JAR
+  option.enc ?= 'utf8'
+  option.workDir ?= WORK_DIR
+  option.coffee ?= {}
 
   mkdirp option.workDir
 
@@ -68,12 +70,11 @@ compile = (option) -> (target) ->
   restore()
   {js, v3SourceMap: JSON.parse v3SourceMap}
 
-write = (option) -> (target) ->
-  mkdirp path.dirname target.v3SourceMap.file
-  fs.writeFileSync "#{target.v3SourceMap.file}", target.js
-  target.v3SourceMap
+write = (option) -> ({js, v3SourceMap}) ->
+  mkdirp path.dirname v3SourceMap.file
+  fs.writeFileSync "#{v3SourceMap.file}", js
+  v3SourceMap
 
-#:: Object? -> Array[String] -> Promise
 checkByClosure = (option) -> (v3SourceMaps) ->
   jss = v3SourceMaps.reduce (acc, v3SourceMap) ->
     acc.concat '--js', v3SourceMap.file
@@ -94,15 +95,29 @@ checkByClosure = (option) -> (v3SourceMaps) ->
     
   new Promise (resolve, reject) ->
     exec command, (err, stdout, stderr) ->
-      if err?.code isnt 1
-        reject stderr
-      else if err?.code is 1
-        resolve stderr
+      if err?.code > 1
+        resolve {message: stderr, v3SourceMaps}
       else
-        resolve CHECK_OK
+        resolve {message: CHECK_OK, v3SourceMaps}
 
+parseCheckResult = ({message, v3SourceMaps}) ->
+  results = ccResultParser.parse message
+  applySourceMapToResults results, v3SourceMaps
 
-parseCheckResult = (message) ->
-  console.log message
+applySourceMapToResults = (results, v3SourceMaps) ->
+  consumers = v3SourceMaps.reduce (acc, sm) ->
+    c = new SourceMapConsumer sm
+    acc[sm.file] = c
+    acc
+  , {}
 
-
+  results.map (r) ->
+    c = consumers[r.file]
+    p = c.originalPositionFor
+      line: r.line
+      column: r.column + 1
+    r.file = p.source
+    r.line = p.line
+    r.column = p.column
+    r
+    
