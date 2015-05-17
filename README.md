@@ -31,12 +31,12 @@ and you check that file by coffee-cupping, you get:
 
 ```json
 [
-  { file: 'a.coffee',
-    line: 4,
-    level: 'ERROR',
-    type: 'assignment',
-    description: 'found   : string\nrequired: number',
-    column: 0 }
+  { "file": "a.coffee",
+    "line": 4,
+    "level": "ERROR",
+    "type": "assignment",
+    "description": "found   : string\nrequired: number",
+    "column": 0 }
 ]
 ```
 
