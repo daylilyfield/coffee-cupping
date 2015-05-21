@@ -47,9 +47,12 @@ Milestones
 
 - [OK] check type for variable assignment
 - [] check type for function assignment
-- [] check type for function call
+- [OK] check type for function call
 - [] check illegal assignment for const variable
 - [] check nullable variable
+- [] support union type
+- [] support type-constructor type like Array
+- [] support record type
 - [] etc
 
 

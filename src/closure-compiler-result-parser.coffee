@@ -6,14 +6,20 @@ exports.parse = parse = (message) ->
   results
     .map split /\n/
     .map toJson
+    .filter (x) -> x?
 
 split = (regex) -> (splittee) -> splittee.split regex
 
 toJson = (lines) ->
-  if /.* - assignment$/.test lines[0]
-    toJsonAsAssignment lines
+  switch
+    when /.* - assignment$/.test lines[0]
+      toJsonAsAssignment lines
+    when /.* does not match formal parameter$/.test lines[0]
+      toJsonFormalParameter lines
+    else
+      undefined
 
-toJsonAsAssignment = (lines) ->
+toJsonAsAssignment = toJsonFormalParameter = (lines) ->
   [general, descriptions..., fragment, mark] = lines
   result = parseGeneral general
   result.description = descriptions.join '\n'
@@ -34,7 +40,7 @@ parseGeneral = (general) ->
     :
     \s(ERROR|WARNING)\s # level
     -
-    \s([a-z]+) # type
+    \s([a-zA-Z0-9\s\?\.\,]+) # type
     $
   ///
   [_, file, line, level, type] = regexp.exec general

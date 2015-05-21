@@ -44,7 +44,6 @@ exports.check = (p, option = {}) ->
     .map write(option)
     .then checkByClosure(option)
     .then parseCheckResult
-    .catch console.log.bind console
 
 relativePath = (p) -> path.relative process.cwd(), p
 
@@ -110,7 +109,6 @@ applySourceMapToResults = (results, v3SourceMaps) ->
     acc[sm.file] = c
     acc
   , {}
-
   results.map (r) ->
     c = consumers[r.file]
     p = c.originalPositionFor

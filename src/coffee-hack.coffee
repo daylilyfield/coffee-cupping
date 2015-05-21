@@ -45,7 +45,7 @@ replaceDeclaredVariables = (fragments, typedFragments) ->
 
 prefixTypeComment = (o) -> (variable) ->
   jsdoc = holder(o).types[variable]
-  [
+  if jsdoc then [
     @makeCode '\n'
     @makeCode jsdoc
     @makeCode '\n'
@@ -53,11 +53,15 @@ prefixTypeComment = (o) -> (variable) ->
     @makeCode variable
     @makeCode ';'
     @makeCode '\n'
+  ] else [
+    @makeCode '\n'
+    @makeCode 'var '
+    @makeCode variable
+    @makeCode ';'
+    @makeCode '\n'
   ]
 
-
 findDeclaredVariablesIndex = (fragments) ->
-  # we need to assign into variable to return single value.
   index = i for f, i in fragments when f.code is 'var '
   index
 
@@ -99,11 +103,15 @@ hackAssign = ->
     if comment?
       [_, expression] = comment.comment.match /^::\s*(.*)/
       jsdoc = typex.jsdocify expression
-      name = @variable.base.value
-      # we may not produce CodeFragment because
-      # BLOCK node is in charge of variable declaration.
-      # so we do not make CodeFragment but law strings.
-      holder(o).types[name] = jsdoc
+      # closure compiler requires the function type expression
+      # just before the function body.
+      # but other type expression (ex: string, number and etc)
+      # needs to be annotated just before the declaration.
+      if /\{function/.test jsdoc
+        fragments = [(@makeCode jsdoc), (@makeCode '\n')].concat fragments
+      else
+        name = @variable.base.value
+        holder(o).types[name] = jsdoc
     fragments
   -> Assign::compileNode = original
 
