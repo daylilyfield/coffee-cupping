@@ -53,12 +53,14 @@ LETTERS =
   ARROW: '->'
   MINUS: '-'
   GT: '>'
+  COMMA: ','
 
 isTypeFirstLetter = (s) -> !!~LETTERS.TYPE_FIRST.indexOf s
 isTypeLetter = (s) -> !!~LETTERS.TYPE.indexOf s
 isMinus = (s) -> s is LETTERS.MINUS
 isGt = (s) -> s is LETTERS.GT
 isWhitespace = (s) -> s is ' '
+isComma = (s) -> s is LETTERS.COMMA
 
 exports.tokenize = (expression) ->
   scanner = new Scanner expression
@@ -70,11 +72,14 @@ exports.tokenize = (expression) ->
       when isTypeFirstLetter c then tokenType c, scanner
       when isMinus c then tokenFunction c, scanner
       when isWhitespace c then undefined # drop whitespace
+      when isComma c then tokenComma c, scanner
       else throwError 'unknown token', scanner.index, scanner.expression
 
     tokens.push token if token?
 
   tokens
+
+tokenComma = (c, scanner) -> new Token TOKENS.COMMA, c
 
 tokenType = (c, scanner) ->
   r = [c]
@@ -99,11 +104,9 @@ throwError = (message, position, expression) ->
     #{whitespace position}^
   """
 
-whitespace = (position) ->
-  if position > 1
-    ([0..(position - 1)].map -> ' ').join ''
-  else
-    ''
+whitespace = (n) ->
+  return '' if n <= 1
+  (' ' for i in [1..n - 1]).join ''
 
 
 

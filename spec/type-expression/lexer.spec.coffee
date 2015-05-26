@@ -26,3 +26,12 @@ describe 'lexer', ->
     expect(tokens[2].type).toBe lexer.TOKENS.TYPE
     expect(tokens[2].representation).toBe 'String'
     
+  it 'should tokenize multi-arg function type expression', ->
+
+    expression = 'Number, Number -> Number'
+
+    tokens = lexer.tokenize expression
+
+    expect(tokens.length).toBe 5
+    expect(tokens[1].type).toBe lexer.TOKENS.COMMA
+    expect(tokens[1].representation).toBe ','

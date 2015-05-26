@@ -22,3 +22,14 @@ describe 'type-expression/parser', ->
 
     expression = ast.toTypeExpression()
     expect(expression).toBe 'function(number):string'
+
+  it 'should make ast for multi-args function type', ->
+
+    source = 'Number, Number -> Number'
+
+    ast = parser.parse lexer.tokenize source
+    expect(ast.constructor.name).toBe parser.FunctionNode.name
+    expect(ast.args.args.length).toBe 2
+
+    expression = ast.toTypeExpression()
+    expect(expression).toBe 'function(number,number):number'

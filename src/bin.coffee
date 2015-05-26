@@ -49,7 +49,7 @@ format = (rs) ->
 
 whitespace = (n) ->
   return '' if n is 0
-  (' ' for i in [0..n]).join ''
+  (' ' for i in [0..n - 1]).join ''
 
 
 output = (rs) ->

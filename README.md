@@ -63,7 +63,7 @@ x = 'x'
 #:: String -> Number
 fx = (x) -> x.length
 
-#:: String | Number
+#:: (String | Number)
 xi = 1
 
 #:: [String]
@@ -77,12 +77,15 @@ Milestones
 -----------
 
 - [OK] check type for variable assignment
-- [] check type for function assignment
 - [OK] check type for function call
 - [] check illegal assignment for const variable
 - [] check nullable variable
+- [] support class
+- [] support class method
+- [] support instance method
+- [] support prototype inheritance
 - [] support union type
-- [] support type-constructor type like Array
+- [] support type-constructor type like Array and Object
 - [] support record type
 - [] etc
 

@@ -25,10 +25,13 @@ exports.TypeNode = class TypeNode extends Node
 exports.ArgumentsNode = class ArgumentsNode extends Node
 
   constructor: (arg) ->
-    @arguments = [arg]
+    @args = [arg]
 
   add: (arg) ->
-    @arguments.push arg
+    @args.push arg
+
+  toTypeExpression: ->
+    (@args.map (a) -> a.toTypeExpression()).join ','
 
 exports.FunctionNode = class FunctionNode extends Node
 
@@ -46,10 +49,20 @@ exports.parse = parse = (tokens) ->
     token = tokens.shift()
     switch
       when token.type is TOKENS.TYPE
-        stack.push new TypeNode token.representation
+        node = stack.pop()
+        if node?.constructor is ArgumentsNode
+          node.add new TypeNode token.representation
+          stack.push node
+        else
+          stack.push new TypeNode token.representation
       when token.type is TOKENS.FUNCTION
         node = stack.pop()
         stack.push new FunctionNode node, parse tokens
+      when token.type is TOKENS.COMMA
+        node = stack.pop()
+        stack.push new ArgumentsNode node
+      else
+        throw new Error "unknown token: #{token}"
 
   stack.pop()
 

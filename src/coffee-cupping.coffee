@@ -2,7 +2,7 @@ fs = require 'fs'
 path = require 'path'
 {exec} = require 'child_process'
 
-debug = require 'debug'
+d = do require './util/debug'
 extend = require 'extend'
 shell = require 'shelljs'
 mkdirp = require 'mkdirp'
@@ -13,17 +13,9 @@ Promise = require 'bluebird'
 hack = require './coffee-hack'
 ccResultParser = require './closure-compiler-result-parser'
 
-D = debug 'coffee-cupping'
-
 CHECK_OK = 'OK'
 WORK_DIR = './.coffee-cupping'
 COMPILER_JAR = './node_modules/google-closure-compiler/compiler.jar'
-
-withLog = (m, f) -> (args...) ->
-  D "begin #{m}"
-  r = f.apply null, args
-  D "end #{m}"
-  return r
 
 exports.check = (p, option = {}) ->
   paths = if Array.isArray(p) then p else [p]
@@ -32,6 +24,8 @@ exports.check = (p, option = {}) ->
   option.enc ?= 'utf8'
   option.workDir ?= WORK_DIR
   option.coffee ?= {}
+
+  d 'check option: ', option
 
   mkdirp option.workDir
 
@@ -48,6 +42,7 @@ exports.check = (p, option = {}) ->
 relativePath = (p) -> path.relative process.cwd(), p
 
 read = (option) -> (p) ->
+  d 'read coffee file from:', p
   source = fs.readFileSync p, option.enc
   {path: p, source}
 
@@ -57,6 +52,7 @@ heredocify = (target) ->
   target
 
 compile = (option) -> (target) ->
+  d 'compile coffee file:' ,target.path
   restore = hack()
 
   mandatory =
@@ -70,6 +66,7 @@ compile = (option) -> (target) ->
   {js, v3SourceMap: JSON.parse v3SourceMap}
 
 write = (option) -> ({js, v3SourceMap}) ->
+  d 'write js file into: %s', v3SourceMap.file
   mkdirp path.dirname v3SourceMap.file
   fs.writeFileSync "#{v3SourceMap.file}", js
   v3SourceMap
@@ -87,10 +84,12 @@ checkByClosure = (option) -> (v3SourceMaps) ->
   java = [
     'java'
     '-jar'
-    option.compiler or COMPILER_JAR
+    option.compiler
   ]
 
   command = (java.concat checks, jss).join ' '
+
+  d 'run cc: %s', command
     
   new Promise (resolve, reject) ->
     exec command, (err, stdout, stderr) ->
@@ -101,6 +100,7 @@ checkByClosure = (option) -> (v3SourceMaps) ->
 
 parseCheckResult = ({message, v3SourceMaps}) ->
   results = ccResultParser.parse message
+  d 'parsed cc results: %o', results
   applySourceMapToResults results, v3SourceMaps
 
 applySourceMapToResults = (results, v3SourceMaps) ->
