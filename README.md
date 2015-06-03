@@ -63,11 +63,16 @@ promise = cupping.check ['a.coffee', 'b.coffee']
 How to Check CommonJS Module
 -----------------------------
 
-if you make your code with commonjs module, you can use coffee-cupping to check your code.  you have two files named a.coffee and b.coffee.  a.coffee contains:
+even if you make your code with commonjs module, you can use coffee-cupping to check your code.  you have two files named a.coffee and b.coffee.
+
+a.coffee contains:
 
 ```coffee-script
-#: String
+#:: String
 exports.x = 'x'
+
+#:: Number, Number -> Number
+exports.add = (x, y) -> x + y
 ```
 
 and b.coffee contains:
@@ -76,13 +81,15 @@ and b.coffee contains:
 a = require './a'
 
 a.x = 1
+
+a.add 'x', 'y'
 ```
 
-and you can check these files by coffee-cupping command.
+you can check these files by coffee-cupping command.
 
 [WIP]
 
-you can also check by coffee-cupping API.
+and you can also check by coffee-cupping API.
 
 ```coffeescript
 cupping = require 'coffee-cupping'
