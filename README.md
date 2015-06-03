@@ -49,12 +49,56 @@ i = 'value'
 How to Use API
 -----------------
 
-WIP.
+if you have a.coffee and b.coffee, you can use coffee-cupping API like below:
+
+```coffeescript
+cupping = require 'coffee-cupping'
+
+promise = cupping.check ['a.coffee', 'b.coffee']
+```
+
+`promise` may resolve with an array of error information object.
+
+
+How to Check CommonJS Module
+-----------------------------
+
+if you make your code with commonjs module, you can use coffee-cupping to check your code.  you have two files named a.coffee and b.coffee.  a.coffee contains:
+
+```coffee-script
+#: String
+exports.x = 'x'
+```
+
+and b.coffee contains:
+
+```coffeescript
+a = require './a'
+
+a.x = 1
+```
+
+and you can check these files by coffee-cupping command.
+
+[WIP]
+
+you can also check by coffee-cupping API.
+
+```coffeescript
+cupping = require 'coffee-cupping'
+
+option =
+  commonjs:
+    enable: true
+    entry: 'b.coffee'
+
+promise = cupping.check ['a.coffee', 'b.coffee'], option
+```
 
 Type Comment Format
 -------------------
 
-WIP.
+[WIP]
 
 ```coffeescript
 #:: String
@@ -78,6 +122,7 @@ Milestones
 
 - [OK] check type for variable assignment
 - [OK] check type for function call
+- [OK] support the commonjs module dependency resolution
 - [] check illegal assignment for const variable
 - [] check nullable variable
 - [] support class

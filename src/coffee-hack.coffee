@@ -37,11 +37,9 @@ hackBlock = ->
 replaceDeclaredVariables = (fragments, typedFragments) ->
   index = findDeclaredVariablesIndex fragments
   fragments.splice index, 3 # remove 'var '
-  pre = fragments[0..(index - 1)]
+  pre = fragments[0...index]
   post = fragments[index..]
-  results = Array::concat.apply pre, typedFragments
-  results = Array::concat.apply results, post
-  results
+  pre.concat typedFragments, post
 
 prefixTypeComment = (o) -> (variable) ->
   jsdoc = holder(o).types[variable]
@@ -62,8 +60,9 @@ prefixTypeComment = (o) -> (variable) ->
   ]
 
 findDeclaredVariablesIndex = (fragments) ->
-  index = i for f, i in fragments when f.code is 'var '
-  index
+  for f, i in fragments
+    if f.code is 'var '
+      return i
 
 findDeclaredVariables = (fragments) ->
   index = findDeclaredVariablesIndex fragments
@@ -107,13 +106,17 @@ hackAssign = ->
       # just before the function body.
       # but other type expression (ex: string, number and etc)
       # needs to be annotated just before the declaration.
-      if /\{function/.test jsdoc
+      if (isFunctionTypeJsDoc jsdoc) or (isPropertyAccess @variable)
         fragments = [(@makeCode jsdoc), (@makeCode '\n')].concat fragments
       else
         name = @variable.base.value
         holder(o).types[name] = jsdoc
     fragments
   -> Assign::compileNode = original
+
+isFunctionTypeJsDoc = (jsdoc) -> /\{function/.test jsdoc
+
+isPropertyAccess = (variable) -> variable.properties.length > 0
 
 holder = (o) ->
   o.scope.__annotations ?= types: {}, consts: {}

@@ -19,9 +19,26 @@ describe 'coffee-cupping', ->
       .then length 2
       .then ignore done
 
-  it 'should be an error because of function-call type mismatch', (done) ->
+  it 'should be errors because of function-call type mismatch', (done) ->
 
     cupping
       .check "#{__dirname}/fixture/function-call.coffee"
       .then length 3
       .then ignore done
+
+  it 'should be errors because of required module type mismatch', (done) ->
+
+    option = commonjs:
+      enable: true
+      entry: "#{__dirname}/fixture/commonjs-requirer.coffee"
+
+    files = [
+      "#{__dirname}/fixture/commonjs-requirer.coffee"
+      "#{__dirname}/fixture/commonjs-requiree.coffee"
+    ]
+
+    cupping
+      .check files, option
+      .then length 3
+      .then ignore done
+

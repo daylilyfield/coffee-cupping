@@ -12,7 +12,7 @@ split = (regex) -> (splittee) -> splittee.split regex
 
 toJson = (lines) ->
   switch
-    when /.* - assignment$/.test lines[0]
+    when /.* - assignment.*/.test lines[0]
       toJsonAsAssignment lines
     when /.* does not match formal parameter$/.test lines[0]
       toJsonFormalParameter lines
@@ -40,7 +40,7 @@ parseGeneral = (general) ->
     :
     \s(ERROR|WARNING)\s # level
     -
-    \s([a-zA-Z0-9\s\?\.\,]+) # type
+    \s([a-zA-Z0-9_\s\?\.\,\$]+) # type
     $
   ///
   [_, file, line, level, type] = regexp.exec general

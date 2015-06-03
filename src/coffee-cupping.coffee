@@ -24,6 +24,7 @@ exports.check = (p, option = {}) ->
   option.enc ?= 'utf8'
   option.workDir ?= WORK_DIR
   option.coffee ?= {}
+  option.commonjs ?= enable: false, entry: ''
 
   d 'check option: ', option
 
@@ -56,7 +57,7 @@ compile = (option) -> (target) ->
   restore = hack()
 
   mandatory =
-    generatedFile: "#{option.workDir}/#{target.path}.cupping.js"
+    generatedFile: "#{option.workDir}/#{target.path.slice 0, -7}.js"
     sourceFiles: [target.path]
     bare: true
     sourceMap: true
@@ -65,6 +66,7 @@ compile = (option) -> (target) ->
   restore()
   {js, v3SourceMap: JSON.parse v3SourceMap}
 
+
 write = (option) -> ({js, v3SourceMap}) ->
   d 'write js file into: %s', v3SourceMap.file
   mkdirp path.dirname v3SourceMap.file
@@ -72,14 +74,9 @@ write = (option) -> ({js, v3SourceMap}) ->
   v3SourceMap
 
 checkByClosure = (option) -> (v3SourceMaps) ->
-  jss = v3SourceMaps.reduce (acc, v3SourceMap) ->
-    acc.concat '--js', v3SourceMap.file
-  , []
-
-  checks = [
-    '--jscomp_error'
-    'checkTypes'
-  ]
+  jss = makeClosureJsOption v3SourceMaps
+  checks = makeClosureCheckOption option
+  commonjs = makeClosureCommonJsOption option, v3SourceMaps
 
   java = [
     'java'
@@ -87,7 +84,7 @@ checkByClosure = (option) -> (v3SourceMaps) ->
     option.compiler
   ]
 
-  command = (java.concat checks, jss).join ' '
+  command = (java.concat checks, commonjs, jss).join ' '
 
   d 'run cc: %s', command
     
@@ -98,7 +95,26 @@ checkByClosure = (option) -> (v3SourceMaps) ->
       else
         resolve {message: CHECK_OK, v3SourceMaps}
 
+makeClosureJsOption = (v3SourceMaps) ->
+  v3SourceMaps.reduce (acc, v3SourceMap) ->
+    acc.concat '--js', v3SourceMap.file
+  , []
+
+makeClosureCheckOption = (option) -> [
+  '--jscomp_error'
+  'checkTypes'
+]
+
+makeClosureCommonJsOption = (option, v3SourceMaps) ->
+  if option.commonjs.enable
+    entry = relativePath option.commonjs.entry
+    js = sm.file for sm in v3SourceMaps when sm.sources[0] is entry
+    ['--process_common_js_modules', '--common_js_entry_module', js]
+  else
+    []
+
 parseCheckResult = ({message, v3SourceMaps}) ->
+  d 'cc results: %s', message
   results = ccResultParser.parse message
   d 'parsed cc results: %o', results
   applySourceMapToResults results, v3SourceMaps
